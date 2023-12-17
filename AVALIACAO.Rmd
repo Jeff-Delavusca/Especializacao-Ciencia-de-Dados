@@ -1,0 +1,176 @@
+---
+title: "Avaliação Final"
+author: "Jeferson Delavusca Gonçalves"
+date: "2023-12-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# **Disciplina: Ciência de Dados**
+
+
+#### O projeto em questão tem como objetivo realizar uma análise concisa dos dados do Enem 2022 referentes à cidade de Santa Maria, localizada no estado do Rio Grande do Sul (RS). Esta análise está inserida no âmbito da disciplina de Ciência de Dados, pertencente ao curso de Especialização em Estatística e Modelagem Quantitativa oferecido pela Universidade Federal de Santa Maria.
+
+
+Pacotes:
+```{r message=FALSE}
+library(tidyverse)
+library(plyr)
+library(ggplot2)
+library(knitr)
+library(DT)
+library(rmarkdown)
+library(kableExtra)
+```
+
+Dataset Geral:
+```{r}
+enem22 <- read.csv("enem_2022.csv")
+```
+
+Dataset Santa Maria (RS):
+```{r}
+enem_SantaMaria <- enem22 %>% 
+  filter(CO_MUNICIPIO_PROVA==4316907)
+```
+
+
+#### Após a extração dos dados para a cidade de Santa Maria, pode-se verificar que o total de inscritos na edição do Enem 2022 na cidade foi de **`r nrow(enem_SantaMaria)`** pessoas.
+
+
+### **Como foi a distribuição do número de inscritos no ENEM 2022 de acordo com o genêro?**
+
+#### A constatação revela que, entre o número total de inscritos, o gênero feminino se destaca como o mais prevalente, conforme ilustrado no gráfico abaixo.
+
+```{r echo=FALSE}
+enem_SantaMaria %>% 
+  mutate(SEXO = case_when(
+    SEXO == "M" ~ "Masculino",
+    SEXO == "F" ~ "Feminino"
+  )) -> enem_SantaMaria
+```
+```{r echo=FALSE}
+contagem_por_sexo <- count(enem_SantaMaria, "SEXO")
+```
+```{r echo=FALSE}
+contagem_por_sexo %>% 
+  ggplot(aes(x = SEXO, y = freq)) +
+  geom_col(position = "dodge", fill = "blue") +
+  labs(title = "Número de inscrições por gênero") +
+  coord_flip() +
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_blank()
+)
+```
+
+
+### **Qual é a distribuição dos inscritos no ENEM 2022 em relação à origem escolar, abrangendo escolas públicas, privadas e aqueles que não forneceram essa informação?**
+
+#### Ao examinar a origem escolar dos inscritos no Enem 2022 em Santa Maria, observa-se que, entre aqueles que forneceram essa informação, a maioria provém de escolas públicas. No entanto, é evidente que uma parcela significativa dos participantes optou por não informar a sua origem escolar.
+
+```{r echo=FALSE}
+enem_SantaMaria %>% 
+  mutate(ESCOLA = as.character(ESCOLA)) -> enem_SantaMaria
+```
+
+```{r echo=FALSE}
+enem_SantaMaria %>% 
+  mutate(
+    ESCOLA = case_when(
+      ESCOLA == "1" ~ "Nao Respondeu",
+      ESCOLA == "2" ~ "Publica",
+      ESCOLA == "3" ~ "Privada"
+    )
+  ) -> enem_SantaMaria
+```
+
+```{r echo=FALSE}
+contagem_escolas <- count(enem_SantaMaria, "ESCOLA")
+```
+
+```{r echo=FALSE}
+ggplot(contagem_escolas, aes(x = ESCOLA, y = freq)) +
+  geom_bar(stat = "identity", fill = "blue", alpha = 0.7) +
+  labs(title = "Número de inscrições por escola",
+       x = "Escola",
+       y = "Número de inscrições") +
+  theme_minimal()
+```
+
+
+### **Como foi distribuído o número de inscritos no ENEM 2022 em relação à sua autodeclaração racial?**
+
+#### Quanto à autodeclaração por raça, observa-se que entre os inscritos para o Enem 2022 em Santa Maria, a maior representação é da raça branca, totalizando **7403** pessoas. Em seguida, destacam-se os pardos, com **1165** inscrições, seguidos pelos pretos, com **523**. Por fim, a menor representatividade é observada entre os indígenas, com apenas **7** inscritos. 
+
+```{r echo=FALSE}
+enem_SantaMaria %>% 
+  mutate(
+    COR_RACA = case_when(
+      COR_RACA == 0 ~ "Nao declaraado",
+      COR_RACA == 1 ~ "Branca",
+      COR_RACA == 2 ~ "Preta",
+      COR_RACA == 3 ~ "Parda",
+      COR_RACA == 4 ~ "Amarela",
+      COR_RACA == 5 ~ "Indigena",
+      COR_RACA == 6 ~ "Nao dispoe da informacao"
+    )
+  ) -> enem_SantaMaria
+```
+```{r echo=FALSE}
+contagem_raca <- count(enem_SantaMaria, "COR_RACA")
+```
+```{r echo=FALSE}
+contagem_raca %>% 
+  DT::datatable()
+```
+
+
+### **Como está distribuído o número total de inscritos no ENEM 2022 de acordo com faixas etárias?**
+
+#### Por fim, nota-se que a distribuição por faixa etária dos inscritos concentra-se principalmente em jovens de 18, 17, 19 e 20 anos, representando a maioria dos participantes. Por outro lado, a menor frequência ocorre na faixa etária acima de 50 anos.
+
+```{r echo=FALSE}
+enem_SantaMaria %>% 
+  mutate(
+    FAIXA_ETARIA = case_when(
+      FAIXA_ETARIA == 1 ~ "Menor de 17 anos",
+      FAIXA_ETARIA == 2 ~ "17 anos",
+      FAIXA_ETARIA == 3 ~ "18 anos",
+      FAIXA_ETARIA == 4 ~ "19 anos",
+      FAIXA_ETARIA == 5 ~ "20 anos",
+      FAIXA_ETARIA == 6 ~ "21 anos",
+      FAIXA_ETARIA == 7 ~ "22 anos",
+      FAIXA_ETARIA == 8 ~ "23 anos",
+      FAIXA_ETARIA == 9 ~ "24 anos",
+      FAIXA_ETARIA == 10 ~ "25 anos",
+      FAIXA_ETARIA == 11 ~ "Entre 26 a 30 anos",
+      FAIXA_ETARIA == 12 ~ "Entre 31 a 35 anos",
+      FAIXA_ETARIA == 13 ~ "Entre 36 a 40 anos",
+      FAIXA_ETARIA == 14 ~ "Entre 41 a 45 anos",
+      FAIXA_ETARIA == 15 ~ "Entre 46 a 50 anos",
+      FAIXA_ETARIA == 16 ~ "Entre 51 a 55 anos",
+      FAIXA_ETARIA == 17 ~ "Entre 56 a 60 anos",
+      FAIXA_ETARIA == 18 ~ "Entre 61 a 65 anos",
+      FAIXA_ETARIA == 19 ~ "Entre 66 a 70 anos",
+      FAIXA_ETARIA == 20 ~ "Maior de 70 anos"
+    )
+  ) -> enem_SantaMaria
+```
+```{r echo=FALSE}
+contagem_FaixaEtaria <- count(enem_SantaMaria, "FAIXA_ETARIA")
+```
+```{r echo=FALSE}
+contagem_FaixaEtaria %>% 
+  ggplot(aes(x = reorder(FAIXA_ETARIA, freq), y = freq)) +
+  geom_col(fill = "blue") +
+  labs(title = "Numero de inscricoes por faixa etaria") +
+  coord_flip() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  )
+
+```
